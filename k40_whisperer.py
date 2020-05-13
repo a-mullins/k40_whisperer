@@ -40,6 +40,7 @@ import cubicsuperpath
 import cspsubdiv
 import traceback
 import struct
+import subprocess
 
 DEBUG = False
 if DEBUG:
@@ -1739,14 +1740,28 @@ class Application(Frame):
             default_types = gcode_types
         else:
             default_types = design_types
-        
-        fileselect = askopenfilename(filetypes=[default_types,
-                                            ("G-Code Files ", ("*.ngc","*.gcode","*.g","*.tap")),\
-                                            ("DXF Files ","*.dxf"),\
-                                            ("SVG Files ","*.svg"),\
-                                            ("All Files ","*"),\
-                                            ("Design Files ", ("*.svg","*.dxf"))],\
-                                            initialdir=init_dir)
+
+        if os.path.isfile('/usr/bin/zenity'):
+            try:
+                fileselect = subprocess.check_output(
+                    ["zenity", "--file-selection",
+                     "--filename", init_dir + os.path.sep,
+                     "--file-filter", "*",
+                     "--file-filter", "*.ngc *.gcode *.g *.tap",
+                     "--file-filter", "*.dxf",
+                     "--file-filter", "*.svg"])
+                fileselect = fileselect.strip()
+            except subprocess.CalledProcessError:
+                filselect = ()
+        else:
+            fileselect = askopenfilename(filetypes=[default_types,
+                                                ("G-Code Files ", ("*.ngc","*.gcode","*.g","*.tap")),\
+                                                ("DXF Files ","*.dxf"),\
+                                                ("SVG Files ","*.svg"),\
+                                                ("All Files ","*"),\
+                                                ("Design Files ", ("*.svg","*.dxf"))],\
+                                                initialdir=init_dir)
+
 
         if fileselect == () or (not os.path.isfile(fileselect)):
             return
